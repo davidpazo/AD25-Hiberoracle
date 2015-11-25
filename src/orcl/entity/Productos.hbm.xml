@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated Nov 24, 2015 9:38:11 AM by Hibernate Tools 3.6.0 -->
+<hibernate-mapping>
+    <class name="orcl.entity.Productos" table="PRODUCTOS" schema="HR">
+        <id name="codigo" type="string">
+            <column name="CODIGO" length="3" />
+            <generator class="assigned" />
+        </id>
+        <property name="descricion" type="string">
+            <column name="DESCRICION" length="15" />
+        </property>
+        <property name="prezo" type="big_decimal">
+            <column name="PREZO" precision="22" scale="0" />
+        </property>
+    </class>
+</hibernate-mapping>
