@@ -5,6 +5,7 @@
  */
 package hiberoracle;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Vector;
 import javax.swing.table.DefaultTableModel;
@@ -13,53 +14,83 @@ import orcl.util.HibernateUtil;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 /**
  *
  * @author oracle
  */
 public class ProductosInterface extends javax.swing.JFrame {
-
-    Hiberoracle ho = new Hiberoracle();
-
+Transaction ts;
     /**
      * Creates new form ProductosInterface
      */
     public ProductosInterface() {
         initComponents();
     }
-    private static String hql="from Productos ";
-    private void executeHQLQuery() {
-    try {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-        Query q = session.createQuery(hql);
-        List resultList = q.list();
-        displayResult(resultList);
-        session.getTransaction().commit();
-    } catch (HibernateException he) {
-        he.printStackTrace();
-    }
-}
-private void displayResult(List resultList) {
-    Vector<String> tableHeaders = new Vector<String>();
-    Vector tableData = new Vector();
-    tableHeaders.add("COdigo"); 
-    tableHeaders.add("Descripcion");
-    tableHeaders.add("Precio");
+    private static String hql = "from Productos ";
     
 
-    for(Object o : resultList) {
-        Productos pro = (Productos)o;
-        Vector<Object> oneRow = new Vector<Object>();
-        oneRow.add(pro.getCodigo());
-        oneRow.add(pro.getDescricion());
-        oneRow.add(pro.getPrezo());
-        
-        tableData.add(oneRow);
+    private void executeSelect() {
+        try {
+            Session session = HibernateUtil.getSessionFactory().openSession();
+            session.beginTransaction();
+            Query q = session.createQuery(hql);
+            List resultList = q.list();
+            displayResult(resultList);
+            session.getTransaction().commit();
+        } catch (HibernateException he) {
+            he.printStackTrace();
+        }
     }
-    jTable1.setModel(new DefaultTableModel(tableData, tableHeaders));
-}
+    private void executeDelete(String cod) {
+        Session ses = HibernateUtil.getSessionFactory().openSession();
+        ts = ses.getTransaction();
+        ses.beginTransaction();
+        Productos pro = new Productos(cod);
+        ses.delete(pro);
+        executeSelect();
+        ts.commit();
+    }
+    private void executeInsert(String cod, String desc, BigDecimal prezo){
+        Session ses = HibernateUtil.getSessionFactory().openSession();
+        ts = ses.getTransaction();
+        ses.beginTransaction();
+        Productos pro = new Productos(cod,desc,prezo);
+        ses.save(pro);
+        executeSelect();
+        ts.commit();
+        
+    }
+    private void executeUpdate(String cod,String desc,BigDecimal prezo){
+        Session ses = HibernateUtil.getSessionFactory().openSession();
+        ts = ses.getTransaction();
+        ses.beginTransaction();
+        Productos pro = new Productos(cod,desc,prezo);
+        ses.update(pro);
+        executeSelect();
+        ts.commit();
+    }
+
+    private void displayResult(List resultList) {
+        Vector<String> tableHeaders = new Vector<String>();
+        Vector tableData = new Vector();
+        tableHeaders.add("COdigo");
+        tableHeaders.add("Descripcion");
+        tableHeaders.add("Precio");
+
+        for (Object o : resultList) {
+            Productos pro = (Productos) o;
+            Vector<Object> oneRow = new Vector<Object>();
+            oneRow.add(pro.getCodigo());
+            oneRow.add(pro.getDescricion());
+            oneRow.add(pro.getPrezo());
+
+            tableData.add(oneRow);
+        }
+        jTable1.setModel(new DefaultTableModel(tableData, tableHeaders));
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -74,7 +105,13 @@ private void displayResult(List resultList) {
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jButton1 = new javax.swing.JButton();
-        jTextField1 = new javax.swing.JTextField();
+        tfcodigo = new javax.swing.JTextField();
+        jButton2 = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        tfdesc = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        tfprezo = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -118,35 +155,85 @@ private void displayResult(List resultList) {
                 jButton1MouseClicked(evt);
             }
         });
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        tfcodigo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tfcodigoActionPerformed(evt);
+            }
+        });
+
+        jButton2.setText("borrar");
+        jButton2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jButton2MouseClicked(evt);
+            }
+        });
+
+        jButton3.setText("Insert");
+        jButton3.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jButton3MouseClicked(evt);
+            }
+        });
+
+        jLabel2.setText("DESC");
+
+        jLabel3.setText("PREZO");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 456, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel2))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(tfcodigo, javax.swing.GroupLayout.DEFAULT_SIZE, 62, Short.MAX_VALUE)
+                            .addComponent(tfdesc)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addGap(18, 18, 18)
+                        .addComponent(tfprezo)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton3)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButton2)
+                        .addGap(18, 18, 18)
                         .addComponent(jButton1)))
-                .addContainerGap())
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 456, Short.MAX_VALUE)
+                .addGap(6, 6, 6))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1)
+                    .addComponent(tfcodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton2)
                     .addComponent(jButton1))
-                .addGap(35, 35, 35)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(tfdesc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton3)
+                    .addComponent(jLabel3)
+                    .addComponent(tfprezo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 194, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -164,9 +251,25 @@ private void displayResult(List resultList) {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton1MouseClicked
-
-        executeHQLQuery();
+        executeSelect();
     }//GEN-LAST:event_jButton1MouseClicked
+
+    private void tfcodigoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfcodigoActionPerformed
+
+    }//GEN-LAST:event_tfcodigoActionPerformed
+
+    private void jButton2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton2MouseClicked
+        executeDelete(tfcodigo.getText());
+    }//GEN-LAST:event_jButton2MouseClicked
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton3MouseClicked
+        executeInsert(tfcodigo.getText(),tfdesc.getText(),BigDecimal.valueOf(Long.valueOf(tfprezo.getText())));
+        
+    }//GEN-LAST:event_jButton3MouseClicked
 
     /**
      * @param args the command line arguments
@@ -202,44 +305,20 @@ private void displayResult(List resultList) {
             }
         });
     }
-    
 
-        /*public DefaultTableModel listado() {
-        DefaultTableModel tabla = new DefaultTableModel ();
-        try {
-            String consulta = "from Productos";
-            Session session = HibernateUtil.getSessionFactory().openSession();
-            session.beginTransaction();
-            Query q = session.createQuery(consulta);
-            List list = q.list();
-            ResultSet rs = (ResultSet) q.list();
-           
-            Object [] fila = new Object[3];
-            while (rs.next()) {
-               String cod = rs.getString(1);
-               String des = rs.getString(2);
-               int prezo = rs.getInt(3);
-               
-               fila [1] = cod;
-               fila [2] = des;
-               fila [3] = prezo;
-               
-               tabla.addRow(fila);
-               
-            }
-  
-        } catch (SQLException ex) {
-            System.out.println("SQLException "+ ex);
-        }
-        return tabla;
-}*/
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
-    private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField tfcodigo;
+    private javax.swing.JTextField tfdesc;
+    private javax.swing.JTextField tfprezo;
     // End of variables declaration//GEN-END:variables
 }
