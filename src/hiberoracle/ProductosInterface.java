@@ -1,11 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package hiberoracle;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import javax.swing.table.DefaultTableModel;
@@ -17,19 +13,20 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 /**
- *
- * @author oracle
+ * ** @author oracle ***
  */
 public class ProductosInterface extends javax.swing.JFrame {
-Transaction ts;
+
+    Transaction ts;
+
     /**
      * Creates new form ProductosInterface
      */
     public ProductosInterface() {
         initComponents();
     }
-    private static String hql = "from Productos ";
-    
+    private static final String hql = "from Productos ";
+    int res;
 
     private void executeSelect() {
         try {
@@ -40,39 +37,65 @@ Transaction ts;
             displayResult(resultList);
             session.getTransaction().commit();
         } catch (HibernateException he) {
-            he.printStackTrace();
+            System.out.println("HibernateException" + he);
         }
     }
+
     private void executeDelete(String cod) {
         Session ses = HibernateUtil.getSessionFactory().openSession();
         ts = ses.getTransaction();
         ses.beginTransaction();
         Productos pro = new Productos(cod);
         ses.delete(pro);
-        executeSelect();
         ts.commit();
+        executeSelect();
     }
-    private void executeInsert(String cod, String desc, BigDecimal prezo){
+
+    private void executeInsert(String cod, String desc, BigDecimal prezo) {
         Session ses = HibernateUtil.getSessionFactory().openSession();
         ts = ses.getTransaction();
         ses.beginTransaction();
-        Productos pro = new Productos(cod,desc,prezo);
+
+        Productos pro = new Productos(cod, desc, prezo);
         ses.save(pro);
-        executeSelect();
         ts.commit();
-        
+        executeSelect();
     }
-    private void executeUpdate(String cod,String desc,BigDecimal prezo){
+    private void executeUpdateMas(BigDecimal prezo) {
+        
+        res = prezo.compareTo(prezo);
+        Session ses = HibernateUtil.getSessionFactory().openSession();
+        ts = ses.getTransaction();
+        ses.beginTransaction();
+        Query q = ses.createQuery(hql);
+        List resultList = q.list();
+        for (Iterator it = resultList.iterator(); it.hasNext();) {
+            Object o = it.next();
+            Productos pro = (Productos) o;
+            if(res >= 4){
+                pro.setPrezo(prezo);
+                ses.update(pro);
+            }
+        }
+        ts.commit();
+        executeSelect();
+    }
+
+    private void executeUpdate(String cod, String desc, String prezo) {
+
         Session ses = HibernateUtil.getSessionFactory().openSession();
         ts = ses.getTransaction();
         ses.beginTransaction();
         Productos pro = (Productos) ses.get(Productos.class, cod);
-        pro.setDescricion(desc);
-        pro.setPrezo(prezo);
-        pro.setCodigo(cod);
+        if (!desc.isEmpty()) {
+            pro.setDescricion(desc);
+        }
+        if (!prezo.isEmpty()) {
+            pro.setPrezo(BigDecimal.valueOf(Long.valueOf(prezo)));
+        }
         ses.update(pro);
-        executeSelect();
         ts.commit();
+        executeSelect();
     }
 
     private void displayResult(List resultList) {
@@ -116,6 +139,7 @@ Transaction ts;
         jLabel3 = new javax.swing.JLabel();
         tfprezo = new javax.swing.JTextField();
         jButton4 = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -196,6 +220,13 @@ Transaction ts;
             }
         });
 
+        jButton5.setText("Update Masivo");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -221,7 +252,10 @@ Transaction ts;
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jButton2)
                         .addGap(18, 18, 18)
-                        .addComponent(jButton1)))
+                        .addComponent(jButton1))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(12, 12, 12)
+                        .addComponent(jButton5)))
                 .addGap(40, 40, 40))
         );
         jPanel1Layout.setVerticalGroup(
@@ -236,7 +270,8 @@ Transaction ts;
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(tfdesc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(tfdesc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton5))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton3)
@@ -244,7 +279,7 @@ Transaction ts;
                     .addComponent(tfprezo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton4))
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 194, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -278,13 +313,17 @@ Transaction ts;
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton3MouseClicked
-        executeInsert(tfcodigo.getText(),tfdesc.getText(),BigDecimal.valueOf(Long.valueOf(tfprezo.getText())));
-        
+        executeInsert(tfcodigo.getText(), tfdesc.getText(), BigDecimal.valueOf(Long.valueOf(tfprezo.getText())));
+
     }//GEN-LAST:event_jButton3MouseClicked
 
     private void jButton4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton4MouseClicked
-        executeUpdate(tfcodigo.getText(),tfdesc.getText(),BigDecimal.valueOf(Long.valueOf(tfprezo.getText())));
+        executeUpdate(tfcodigo.getText(), tfdesc.getText(), tfprezo.getText());
     }//GEN-LAST:event_jButton4MouseClicked
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        executeUpdateMas(BigDecimal.valueOf(Long.valueOf(tfprezo.getText())));
+    }//GEN-LAST:event_jButton5ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -327,6 +366,7 @@ Transaction ts;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
